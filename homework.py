@@ -1,3 +1,6 @@
+from typing import Union, List
+
+
 class InfoMessage:
     """Информационное сообщение о тренировке."""
 
@@ -27,6 +30,7 @@ class Training:
     """Базовый класс тренировки."""
     LEN_STEP = 0.65
     M_IN_KM = 1000
+    min = 60
 
     def __init__(
             self,
@@ -48,7 +52,7 @@ class Training:
 
     def get_spent_calories(self) -> float:
         """Получить количество затраченных калорий."""
-        pass
+        raise NotImplementedError
 
     def show_training_info(self) -> InfoMessage:
         """Вернуть информационное сообщение о выполненной тренировке."""
@@ -62,21 +66,21 @@ class Training:
 
 class Running(Training):
     """Тренировка: бег."""
-
-    def __init__(self,
-                 action: int,
-                 duration: float,
-                 weight: float):
-        super().__init__(action, duration, weight)
+    const_c_r_1 = 18
+    const_c_r_2 = 20
 
     def get_spent_calories(self) -> float:
-        cal_r = (18 * self.get_mean_speed()
-                 - 20) * self.weight / self.M_IN_KM * (self.duration * 60)
+        cal_r = ((self.const_c_r_1 * self.get_mean_speed()
+                 - self.const_c_r_2) * self.weight
+                 / self.M_IN_KM) * (self.duration * self.min)
         return cal_r
 
 
 class SportsWalking(Training):
     """Тренировка: спортивная ходьба."""
+    const_c_w_1 = 0.035
+    const_c_w_2 = 2
+    const_c_w_3 = 0.029
 
     def __init__(self,
                  action: int,
@@ -87,15 +91,17 @@ class SportsWalking(Training):
         self.height = height
 
     def get_spent_calories(self) -> float:
-        cal_w = (0.035 * self.weight
-                 + (self.get_mean_speed() ** 2 // self.height)
-                 * 0.029 * self.weight) * (self.duration * 60)
+        cal_w = (self.const_c_w_1 * self.weight
+                 + (self.get_mean_speed() ** self.const_c_w_2 // self.height)
+                 * self.const_c_w_3 * self.weight) * (self.duration * self.min)
         return cal_w
 
 
 class Swimming(Training):
     """Тренировка: плавание."""
     LEN_STEP = 1.38
+    const_c_s_1 = 1.1
+    const_c_s_2 = 2
 
     def get_distance(self) -> float:
         """Получить дистанцию в км."""
@@ -117,11 +123,12 @@ class Swimming(Training):
                  * self.count_pool) / self.M_IN_KM) / self.duration
 
     def get_spent_calories(self) -> float:
-        cal_s = (self.get_mean_speed() + 1.1) * 2 * self.weight
+        cal_s = (self.get_mean_speed()
+                 + self.const_c_s_1) * self.const_c_s_2 * self.weight
         return cal_s
 
 
-def read_package(workout_type: str, data: list) -> Training:
+def read_package(workout_type: str, data: List[Union[int, float]]) -> Training:
     """Прочитать данные полученные от датчиков."""
     work = {"SWM": Swimming,
             "RUN": Running,
